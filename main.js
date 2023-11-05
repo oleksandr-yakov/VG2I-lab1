@@ -12,11 +12,30 @@ let segments = 30;
 let segments1 = 60;
 let vert = 0;
 let goriz = 0;
+
 function deg2rad(angle) {
     return angle * Math.PI / 180;
 }
 
+let parameters = ['R', 'a']; 
 
+parameters.forEach((param) => {
+    console.log(param)
+    document.getElementById(param).addEventListener("change", function() {
+        let rValue = document.getElementById(param).value;
+        document.getElementById(param + '-add').textContent = rValue;
+        updateSurface();
+    });
+    console.log(param)
+});
+
+function updateSurface() {
+    R = parseFloat(document.getElementById('R').value);
+    a = parseFloat(document.getElementById('a').value);
+
+    surface.BufferData(CreateSurfaceData(R, a, n, segments)); 
+    draw();
+}
 // Constructor
 function Model(name) {
     this.name = name;
