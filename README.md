@@ -1,5 +1,9 @@
-# WebGL
+# WebGL Lab 1
 
-Project that accompanies VGGI credit module.
+![Текст підпису](URL_зображення)
 
-Visit vggi-kpi.blogspot.com for more information
+![Текст підпису](URL_зображення)
+
+![Текст підпису](URL_зображення)
+
+![Текст підпису](URL_зображення)
