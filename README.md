@@ -1,9 +1,9 @@
 # WebGL Lab 1
 
-![Текст підпису](URL_зображення)
+![1](https://github.com/oleksandr-yakov/VG2I-lab1/blob/main/foto/1.jpg)
 
-![Текст підпису](URL_зображення)
+![2](https://github.com/oleksandr-yakov/VG2I-lab1/blob/main/foto/2.jpg)
 
-![Текст підпису](URL_зображення)
+![3](https://github.com/oleksandr-yakov/VG2I-lab1/blob/main/foto/3.jpg)
 
-![Текст підпису](URL_зображення)
+![4](https://github.com/oleksandr-yakov/VG2I-lab1/blob/main/foto/4.jpg)
