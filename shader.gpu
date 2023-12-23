@@ -3,9 +3,35 @@
 // Vertex shader
 const vertexShaderSource = `
 attribute vec3 vertex;
+attribute vec3 normal;
 uniform mat4 ModelViewProjectionMatrix;
+uniform mat4 ModelNormalMatrix;
+varying vec3 varyingClr;
+
+uniform vec3 directionOfLight;
+uniform vec3 diffuseComponent;
 
 void main() {
+    vec3 N = normalize(mat3(ModelNormalMatrix)*normal);
+    vec3 V = mat3(ModelViewProjectionMatrix)*vertex;
+    vec3 L = normalize(directionOfLight);
+
+    // Lambert's cosine law
+    float lambertian = max(dot(N, L), 0.0);
+    float specular = 0.0;
+    if(lambertian > 0.0) {
+        vec3 R = reflect(-L, N);      // Reflected light vector
+        vec3 V = normalize(-V); // Vector to viewer
+        // Compute the specular term
+        float specAngle = max(dot(R, V), 0.0);
+        specular = pow(specAngle, 20.0);
+    }
+    vec3 ambi = vec3(0.1);
+    vec3 spec = vec3(1.0);
+    varyingClr = vec3(ambi +
+                        lambertian * diffuseComponent +
+                        specular * spec);
+    //varyingClr = N;
     gl_Position = ModelViewProjectionMatrix * vec4(vertex,1.0);
 }`;
 
@@ -19,6 +45,8 @@ const fragmentShaderSource = `
 #endif
 
 uniform vec4 color;
+varying vec3 varyingClr;
 void main() {
-    gl_FragColor = color;
+    gl_FragColor = vec4(varyingClr,1.0);
+    //gl_FragColor = color;
 }`;
