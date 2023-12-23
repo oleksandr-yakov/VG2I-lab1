@@ -48,5 +48,8 @@ uniform vec4 color;
 varying vec3 varyingClr;
 void main() {
     gl_FragColor = vec4(varyingClr,1.0);
+    if(color.a<0.5){
+        gl_FragColor = vec4(color.rgb,1.0);
+    }
     //gl_FragColor = color;
 }`;
