@@ -4,7 +4,8 @@ let gl;                         // The webgl context.
 let surface;                    // A surface model
 let shProgram;                  // A shader program
 let spaceball;                  // A SimpleRotator object that lets the user rotate the view by mouse.
-let line_segment;
+let texPoint = [0, 0]
+let sphere;
 
 let R = 1;
 let a = 0.5;
@@ -19,7 +20,6 @@ function deg2rad(angle) {
 }
 
 let parameters = ['R', 'a'];
-let parameters2 = ['r', 'g', 'b'];
 
 parameters.forEach((param) => {
     console.log(param)
@@ -30,12 +30,6 @@ parameters.forEach((param) => {
     });
     console.log(param)
 });
-parameters2.forEach((p) => {
-    document.getElementById(p).addEventListener("change", function () {
-        updateSurface();
-    })
-})
-
 function updateSurface() {
     R = parseFloat(document.getElementById('R').value);
     a = parseFloat(document.getElementById('a').value);
@@ -48,7 +42,7 @@ function updateSurface() {
 function Model(name) {
     this.name = name;
     this.iVertexBuffer = gl.createBuffer();
-    this.iNormalBuffer = gl.createBuffer();
+    this.iTextureBuffer = gl.createBuffer();
     this.count = 0;
 
     this.BufferData = function (vertices) {
@@ -60,7 +54,7 @@ function Model(name) {
     }
     this.BufferNormalData = function (vertices) {
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.iNormalBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.iTextureBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STREAM_DRAW);
     }
 
@@ -69,28 +63,43 @@ function Model(name) {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.iVertexBuffer);
         gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(shProgram.iAttribVertex);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.iNormalBuffer);
-        gl.vertexAttribPointer(shProgram.iAttribNormal, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(shProgram.iAttribNormal);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.iTextureBuffer);
+        gl.vertexAttribPointer(shProgram.iAttribTexCoord, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(shProgram.iAttribTexCoord);
 
         gl.drawArrays(gl.TRIANGLES, 0, this.count);
-        console.log(this.count)
-        // for (let i = 0; i <= vert; i += segments) {
-        //     gl.drawArrays(gl.LINE_STRIP, i, segments1);
-        // }
-
-        // for (let i = vert; i <= this.count; i += segments) {
-        //     gl.drawArrays(gl.LINE_STRIP, i, segments);
-        // }
-
     }
-    this.Draw2 = function () {
+}
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.iVertexBuffer);
-        gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(shProgram.iAttribVertex);
+function CreateSphereList(step, r = 0.2) {
+    let vertexList = [];
 
-        gl.drawArrays(gl.LINE_STRIP, 0, this.count);
+    let u = 0,
+        v = 0;
+    while (u < Math.PI * 2) {
+        while (v < Math.PI) {
+            let v1 = getSphereVertex(u, v, r);
+            let v2 = getSphereVertex(u + step, v, r);
+            let v3 = getSphereVertex(u, v + step, r);
+            let v4 = getSphereVertex(u + step, v + step, r);
+            vertexList.push(v1.x, v1.y, v1.z);
+            vertexList.push(v2.x, v2.y, v2.z);
+            vertexList.push(v3.x, v3.y, v3.z);
+            vertexList.push(v3.x, v3.y, v3.z);
+            vertexList.push(v2.x, v2.y, v2.z);
+            vertexList.push(v4.x, v4.y, v4.z);
+            v += step;
+        }
+        v = 0;
+        u += step;
+    }
+    return vertexList;
+}
+function getSphereVertex(long, lat, r) {
+    return {
+        x: r * Math.cos(long) * Math.sin(lat),
+        y: r * Math.sin(long) * Math.sin(lat),
+        z: r * Math.cos(lat)
     }
 }
 
@@ -145,23 +154,14 @@ function draw() {
     gl.uniformMatrix4fv(shProgram.iModelNormalMatrix, false, modelNormalMatrix);
 
     /* Draw the six faces of a cube, with different colors. */
-    gl.uniform4fv(shProgram.iColor, [1, 1, 0, 1]);
-    let x = Math.sin(Date.now() * 0.001)
-    let rValue = document.getElementById('R').value
-    let lightVector = [x * rValue * rValue, 1 * rValue * rValue, 1 * rValue * rValue]
-    if (rValue < 1.1) {
-        lightVector = [x * (rValue + 1), 1 * (rValue + 1), 1 * (rValue + 1)]
-    }
-    line_segment.BufferData([0, 0, 0, ...lightVector])
-    gl.uniform3fv(shProgram.iDirectionOfLight, [x, 1, 1]);
-    let r = document.getElementById('r').value
-    let g = document.getElementById('g').value
-    let b = document.getElementById('b').value
-    gl.uniform3fv(shProgram.iDiffuseComponent, [r, g, b]);
+    gl.uniform4fv(shProgram.iColor, [1, 1, 0, 0]);
+    gl.uniform2f(shProgram.iTexPoint, texPoint[0] / (Math.PI * 2), texPoint[1] / Math.PI);
+    gl.uniform1f(shProgram.iRotate, document.getElementById('rotate').value);
 
     surface.Draw();
-    gl.uniform4fv(shProgram.iColor, [1, 0, 0, 0]);
-    line_segment.Draw2()
+    gl.uniform4fv(shProgram.iColor, [1, 0, 1, 1]);
+    gl.uniformMatrix4fv(shProgram.iModelViewProjectionMatrix, false, m4.multiply(modelViewProjection, m4.translation(...CreateVertex(R, a, n, ...texPoint))));
+    sphere.Draw()
 }
 
 let CreateVertex = (R, a, n, phi, v) => {
@@ -185,6 +185,11 @@ let CreateNormal = (R, a, n, phi, v) => {
     return norm
 }
 
+function map(value, a, b, c, d) {
+    value = (value - a) / (b - a);
+    return c + value * (d - c);
+}
+
 function CreateSurfaceData(R, a, n, segments) {
     let vertexList = [];
     let normalList = [];
@@ -200,10 +205,10 @@ function CreateSurfaceData(R, a, n, segments) {
             let vert2 = CreateVertex(R, a, n, phi + phiIncrement, v)
             let vert3 = CreateVertex(R, a, n, phi, v + vIncrement)
             let vert4 = CreateVertex(R, a, n, phi + phiIncrement, v + vIncrement)
-            let norm1 = CreateVertex(R, a, n, phi, v)
-            let norm2 = CreateVertex(R, a, n, phi + phiIncrement, v)
-            let norm3 = CreateVertex(R, a, n, phi, v + vIncrement)
-            let norm4 = CreateVertex(R, a, n, phi + phiIncrement, v + vIncrement)
+            let tex1 = [phi / (Math.PI * 2), v / Math.PI]
+            let tex2 = [(phi + phiIncrement) / (Math.PI * 2), v / Math.PI]
+            let tex3 = [phi / (Math.PI * 2), (v + vIncrement) / Math.PI]
+            let tex4 = [(phi + phiIncrement) / (Math.PI * 2), (v + vIncrement) / Math.PI]
             vertexList.push(
                 ...vert1,
                 ...vert2,
@@ -213,12 +218,12 @@ function CreateSurfaceData(R, a, n, segments) {
                 ...vert4,
             );
             normalList.push(
-                ...norm1,
-                ...norm2,
-                ...norm3,
-                ...norm3,
-                ...norm2,
-                ...norm4,
+                ...tex1,
+                ...tex2,
+                ...tex3,
+                ...tex3,
+                ...tex2,
+                ...tex4,
             );
         }
     }
@@ -237,27 +242,23 @@ function initGL() {
     shProgram.Use();
 
     shProgram.iAttribVertex = gl.getAttribLocation(prog, "vertex");
-    shProgram.iAttribNormal = gl.getAttribLocation(prog, "normal");
+    shProgram.iAttribTexCoord = gl.getAttribLocation(prog, "texCoord");
     shProgram.iModelViewProjectionMatrix = gl.getUniformLocation(prog, "ModelViewProjectionMatrix");
-    shProgram.iModelNormalMatrix = gl.getUniformLocation(prog, "ModelNormalMatrix");
     shProgram.iColor = gl.getUniformLocation(prog, "color");
-    shProgram.iDirectionOfLight = gl.getUniformLocation(prog, "directionOfLight");
-    shProgram.iDiffuseComponent = gl.getUniformLocation(prog, "diffuseComponent");
+    shProgram.iTexPoint = gl.getUniformLocation(prog, "texPoint");
+    shProgram.iRotate = gl.getUniformLocation(prog, "rotate");
 
     surface = new Model('Surface');
-    line_segment = new Model('line_segment');
     let surfaceData = CreateSurfaceData(R, a, n, segments)
 
     surface.BufferData(surfaceData.vertices);
     surface.BufferNormalData(surfaceData.normals);
-    line_segment.BufferData([0, 0, 0, 1, 1, 1])
+
+    sphere = new Model()
+    sphere.BufferData(CreateSphereList(1, 0.1))
+    sphere.BufferNormalData(CreateSphereList(1, 0.1))
 
     gl.enable(gl.DEPTH_TEST);
-}
-
-function draw2() {
-    draw()
-    window.requestAnimationFrame(draw2)
 }
 
 
@@ -320,6 +321,46 @@ function init() {
     }
 
     spaceball = new TrackballRotator(canvas, draw, 0);
+    LoadTexture()
+    draw();
+}
 
-    draw2();
+function LoadTexture() {
+    let texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    const image = new Image();
+    image.crossOrigin = 'anonymus';
+    image.src = "https://raw.githubusercontent.com/GOB1F/vggi/main/dark%2Brough%2Btree%2Bbark.jpeg";
+    image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            image
+        );
+        console.log("imageLoaded")
+        draw()
+    }
+}
+
+window.onkeydown = (e) => {
+    if (e.keyCode == 87) {
+        texPoint[0] = Math.min(texPoint[0] + 0.1, Math.PI * 2);
+    }
+    else if (e.keyCode == 65) {
+        texPoint[1] = Math.max(texPoint[1] - 0.1, 0);
+    }
+    else if (e.keyCode == 83) {
+        texPoint[0] = Math.max(texPoint[0] - 0.1, 0);
+    }
+    else if (e.keyCode == 68) {
+        texPoint[1] = Math.min(texPoint[1] + 0.1, Math.PI);
+    }
+    draw()
 }
