@@ -4,6 +4,7 @@ let gl;                         // The webgl context.
 let surface;                    // A surface model
 let shProgram;                  // A shader program
 let spaceball;                  // A SimpleRotator object that lets the user rotate the view by mouse.
+let line_segment;
 
 let R = 1;
 let a = 0.5;
@@ -18,7 +19,7 @@ function deg2rad(angle) {
 }
 
 let parameters = ['R', 'a'];
-let parameters2 = ['x', 'y', 'z', 'r', 'g', 'b'];
+let parameters2 = ['r', 'g', 'b'];
 
 parameters.forEach((param) => {
     console.log(param)
@@ -83,6 +84,14 @@ function Model(name) {
         // }
 
     }
+    this.Draw2 = function () {
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.iVertexBuffer);
+        gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(shProgram.iAttribVertex);
+
+        gl.drawArrays(gl.LINE_STRIP, 0, this.count);
+    }
 }
 
 
@@ -137,16 +146,22 @@ function draw() {
 
     /* Draw the six faces of a cube, with different colors. */
     gl.uniform4fv(shProgram.iColor, [1, 1, 0, 1]);
-    let x = document.getElementById('x').value
-    let y = document.getElementById('y').value
-    let z = document.getElementById('z').value
-    gl.uniform3fv(shProgram.iDirectionOfLight, [x, y, z]);
+    let x = Math.sin(Date.now() * 0.001)
+    let rValue = document.getElementById('R').value
+    let lightVector = [x * rValue * rValue, 1 * rValue * rValue, 1 * rValue * rValue]
+    if (rValue < 1.1) {
+        lightVector = [x * (rValue + 1), 1 * (rValue + 1), 1 * (rValue + 1)]
+    }
+    line_segment.BufferData([0, 0, 0, ...lightVector])
+    gl.uniform3fv(shProgram.iDirectionOfLight, [x, 1, 1]);
     let r = document.getElementById('r').value
     let g = document.getElementById('g').value
     let b = document.getElementById('b').value
     gl.uniform3fv(shProgram.iDiffuseComponent, [r, g, b]);
 
     surface.Draw();
+    gl.uniform4fv(shProgram.iColor, [1, 0, 0, 0]);
+    line_segment.Draw2()
 }
 
 let CreateVertex = (R, a, n, phi, v) => {
@@ -230,12 +245,19 @@ function initGL() {
     shProgram.iDiffuseComponent = gl.getUniformLocation(prog, "diffuseComponent");
 
     surface = new Model('Surface');
+    line_segment = new Model('line_segment');
     let surfaceData = CreateSurfaceData(R, a, n, segments)
 
     surface.BufferData(surfaceData.vertices);
     surface.BufferNormalData(surfaceData.normals);
+    line_segment.BufferData([0, 0, 0, 1, 1, 1])
 
     gl.enable(gl.DEPTH_TEST);
+}
+
+function draw2() {
+    draw()
+    window.requestAnimationFrame(draw2)
 }
 
 
@@ -299,5 +321,5 @@ function init() {
 
     spaceball = new TrackballRotator(canvas, draw, 0);
 
-    draw();
+    draw2();
 }

@@ -1,4 +1,4 @@
-# WebGL Lab 2
+# WebGL Lab 3
 
 
-![plot](./gif/lab2.gif)
+![plot](./gif/lab3.gif)
