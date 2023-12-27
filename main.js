@@ -333,7 +333,7 @@ function LoadTexture() {
 
     const image = new Image();
     image.crossOrigin = 'anonymus';
-    image.src = "https://github.com/oleksandr-yakov/VG2I-lab1/blob/CGW/gif/build.png";
+    image.src = "https://github.com/oleksandr-yakov/VG2I-lab1/blob/CGW/gif/images.png";
     image.onload = () => {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(
