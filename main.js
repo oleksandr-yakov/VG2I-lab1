@@ -333,7 +333,7 @@ function LoadTexture() {
 
     const image = new Image();
     image.crossOrigin = 'anonymus';
-    image.src = "https://www.google.com/search?q=jpeg++512x512&tbm=isch&ved=2ahUKEwiS4dik0a-DAxW-gv0HHaUoC1IQ2-cCegQIABAA&oq=jpeg++512x512&gs_lcp=CgNpbWcQAzIGCAAQCBAeOgoIABCABBCKBRBDOgUIABCABDoGCAAQBxAeOgQIIxAnOgQIABAeOgYIABAFEB46CAgAEAgQBxAeUOYbWO4kYIkmaABwAHgAgAGOAYgB1gSSAQM2LjGYAQCgAQGqAQtnd3Mtd2l6LWltZ8ABAQ&sclient=img&ei=1xqMZdKZLL6F9u8PpdGskAU&bih=932&biw=1868#imgrc=R2a1GP3wE0wdwM";
+    image.src = "https://raw.githubusercontent.com/GOB1F/vggi/main/dark%2Brough%2Btree%2Bbark.jpeg";
     image.onload = () => {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(
